@@ -11,5 +11,42 @@ export default function DeliveryBarChart({ items = [], isDark }) {
       { label: 'Completed', data: items.map((i) => i.completed), backgroundColor: colors.info, borderRadius: 6 },
     ],
   };
-  return <Bar key={isDark ? 'dark' : 'light'} data={data} options={{ responsive: true, maintainAspectRatio: false, plugins: { tooltip: tooltipConfig(colors), legend: { labels: { boxWidth: 8, usePointStyle: true } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: colors.grid }, ticks: { precision: 0 } } } }} />;
+  return (
+    <Bar
+      key={isDark ? 'dark' : 'light'}
+      data={data}
+      options={{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: tooltipConfig(colors),
+          legend: {
+            labels: {
+              boxWidth: 8,
+              usePointStyle: true,
+              color: colors.textMuted,
+            },
+          },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false },
+            ticks: {
+              color: colors.textMuted,
+            },
+          },
+          y: {
+            stacked: true,
+            grid: { color: colors.grid },
+            ticks: {
+              precision: 0,
+              color: colors.textMuted,
+            },
+          },
+        },
+      }}
+    />
+  );
+
 }

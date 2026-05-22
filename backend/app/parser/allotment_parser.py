@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +39,32 @@ def parse_date(value: Any) -> date | None:
         return value.date()
     if isinstance(value, date):
         return value
+    
+    # Handle Excel serial dates
+    if isinstance(value, (int, float)):
+        try:
+            serial = int(value)
+            if serial < 1:
+                return None
+            if serial < 60:
+                return date(1899, 12, 31) + timedelta(days=serial)
+            else:
+                return date(1899, 12, 30) + timedelta(days=serial)
+        except Exception:
+            return None
+            
     text = str(value).strip()
+    if text.isdigit():
+        try:
+            serial = int(text)
+            if serial >= 1:
+                if serial < 60:
+                    return date(1899, 12, 31) + timedelta(days=serial)
+                else:
+                    return date(1899, 12, 30) + timedelta(days=serial)
+        except Exception:
+            pass
+
     for fmt in ("%d-%b-%y", "%d-%b-%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"):
         try:
             return datetime.strptime(text, fmt).date()

@@ -13,7 +13,7 @@ const TAB_META = {
   'workload': { path: 'Analytics / Workload', title: 'Trainer Workload & Capacity' }
 };
 
-export default function Topbar({ activeTab = 'dashboard', lastSynced, onRefresh, onToggleTheme, isDark }) {
+export default function Topbar({ activeTab = 'dashboard', lastSynced, onRefresh, onToggleTheme, isDark, selectedRange, onChangeRange }) {
   const meta = TAB_META[activeTab] || TAB_META['dashboard'];
 
   return (
@@ -23,7 +23,18 @@ export default function Topbar({ activeTab = 'dashboard', lastSynced, onRefresh,
         <h1>{meta.title}</h1>
       </div>
       <div className="topbar-actions">
-        <div className="range-pill"><span>7D</span><span className="active">1M</span><span>3M</span><span>YTD</span></div>
+        <div className="range-pill">
+          {['7D', '1M', '3M', 'YTD'].map((r) => (
+            <span
+              key={r}
+              className={selectedRange === r ? 'active' : ''}
+              onClick={() => onChangeRange?.(r)}
+              style={{ cursor: 'pointer', userSelect: 'none' }}
+            >
+              {r}
+            </span>
+          ))}
+        </div>
         <button className="ghost-button" onClick={onRefresh}>Refresh</button>
         <button className="icon-button" onClick={onToggleTheme} aria-label="Toggle theme">{isDark ? '☾' : '☀'}</button>
         <div className="sync-text">{syncLabel(lastSynced)}</div>

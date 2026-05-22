@@ -6,7 +6,7 @@ export function chartColors(isDark) {
     info: isDark ? '#22d3ee' : '#06b6d4',
     accent: '#0325BD',
     grid: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-    textMuted: isDark ? '#475569' : '#94a3b8',
+    textMuted: isDark ? '#94a3b8' : '#64748b',
     textPrimary: isDark ? '#f8fafc' : '#1e293b',
     surface: isDark ? '#1a1d27' : '#ffffff',
     border: isDark ? '#252836' : '#e2e8f0',

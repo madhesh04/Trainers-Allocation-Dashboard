@@ -11,6 +11,8 @@ export const useDashboardStore = create((set, get) => ({
   lastSynced: null,
   isLoading: true,
   error: null,
+  selectedRange: '1M',
+  setSelectedRange: (range) => set({ selectedRange: range }),
   pollingInterval: null,
 
   fetchAll: async () => {

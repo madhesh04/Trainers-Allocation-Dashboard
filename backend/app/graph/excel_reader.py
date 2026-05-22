@@ -39,7 +39,7 @@ def _build_payload(rows: list[list[Any]]) -> dict[str, Any]:
     return {
         "parsed": parsed,
         "kpis": compute_kpis(parsed, conflicts),
-        "availability": build_availability(parsed),
+        "availability": build_availability(parsed, days=180),
         "deliveries": build_pipeline(parsed),
         "conflicts": conflicts,
         "campus_stats": build_campus_stats(parsed),

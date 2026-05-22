@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import BillingDonut from '../components/charts/BillingDonut';
 import DeliveryBarChart from '../components/charts/DeliveryBarChart';
+
 import StatusPie from '../components/charts/StatusPie';
 import WorkloadLine from '../components/charts/WorkloadLine';
 import CampusTable from '../components/campus/CampusTable';
@@ -41,7 +41,33 @@ export default function Dashboard({ isDark, onToggleTheme }) {
     fetchAll,
     startPolling,
     stopPolling,
+    selectedRange,
+    setSelectedRange,
   } = useDashboardStore();
+
+  // Dynamic duration filtering for Heatmap
+  const getSlicedAvailability = () => {
+    if (!availability) return null;
+    let limit = 30; // default '1M'
+    if (selectedRange === '7D') limit = 7;
+    else if (selectedRange === '1M') limit = 30;
+    else if (selectedRange === '3M') limit = 90;
+    else if (selectedRange === 'YTD') limit = 180; // 180 days max
+
+    const slicedDays = (availability.days || []).slice(0, limit);
+    const slicedGrid = (availability.grid || []).map(row => ({
+      ...row,
+      cells: (row.cells || []).slice(0, limit)
+    }));
+
+    return {
+      ...availability,
+      days: slicedDays,
+      grid: slicedGrid
+    };
+  };
+
+  const slicedAvailability = getSlicedAvailability();
 
   // --- Router & Nav State ---
   const [activeTab, setActiveTab] = useState(() => {
@@ -115,6 +141,10 @@ export default function Dashboard({ isDark, onToggleTheme }) {
       // ----------------------------------------------------
       case 'dashboard': {
         const overviewDeliveries = (deliveries?.deliveries || []).slice(0, 12);
+        const campusRows = campusStats?.campuses || [];
+        const avgUtilization = campusRows.length
+          ? Math.round(campusRows.reduce((acc, c) => acc + c.utilization_pct, 0) / campusRows.length)
+          : 0;
 
         return (
           <>
@@ -122,17 +152,15 @@ export default function Dashboard({ isDark, onToggleTheme }) {
               <KpiCard label="Active Deliveries" value={kpis?.active_deliveries ?? '--'} delta="↑ live" deltaType="up" icon="📦" delay={1} />
               <KpiCard label="Trainers On Ground" value={kpis?.trainers_on_ground ?? '--'} delta="this week" deltaType="up" icon="👥" iconColor="success" sparklineColor="var(--color-success)" delay={2} />
               <KpiCard label="Open Conflicts" value={conflictCount} delta="! Attention" deltaType={conflictCount ? 'neutral' : 'up'} icon="⚠" iconColor="danger" sparklineColor="var(--color-danger)" delay={3} />
-              <KpiCard label="Billable Rate" value={`${kpis?.billable_rate ?? '--'}%`} delta="utilization" deltaType="up" icon="₹" iconColor="info" sparklineColor="var(--color-info)" delay={4} />
+              <KpiCard label="Average Utilization" value={`${avgUtilization}%`} delta="roster load" deltaType="up" icon="📈" iconColor="info" sparklineColor="var(--color-info)" delay={4} />
             </div>
 
-            <div className="two-col animate-fade-in-up delay-4">
-              <Card title="Delivery Activity" subtitle="Monthly trainer assignment volume" chip="Stacked">
-                <div className="chart-box"><DeliveryBarChart items={kpis?.monthly_activity || []} isDark={isDark} /></div>
-              </Card>
-              <Card title="Billing Breakdown" subtitle="Billable vs non-billable allocation" chip="Finance">
-                <BillingDonut billing={kpis?.billing || {}} isDark={isDark} />
+            <div className="animate-fade-in-up delay-4">
+              <Card title="Delivery Activity" subtitle="Monthly trainer assignment volume" chip="Stacked Activity">
+                <div className="chart-box" style={{ height: '300px' }}><DeliveryBarChart items={kpis?.monthly_activity || []} isDark={isDark} /></div>
               </Card>
             </div>
+
 
             <div className="three-col animate-fade-in-up delay-5">
               <Card title="Campus Utilization" subtitle="Top campuses by delivery count"><CampusTable campuses={campusStats?.campuses || []} /></Card>
@@ -141,7 +169,7 @@ export default function Dashboard({ isDark, onToggleTheme }) {
             </div>
 
             <div className="two-equal animate-fade-in-up delay-6">
-              <Card title="Trainer Availability" subtitle="Daily allocation heatmap per trainer" chip="Heatmap"><AvailabilityHeatmap availability={availability || {}} /></Card>
+              <Card title="Trainer Availability" subtitle="Daily allocation heatmap per trainer" chip="Heatmap"><AvailabilityHeatmap availability={slicedAvailability || {}} /></Card>
               <Card title="Workload Trend" subtitle="Assigned sessions vs capacity"><div className="chart-box"><WorkloadLine workload={kpis?.workload || []} isDark={isDark} /></div></Card>
             </div>
           </>
@@ -152,7 +180,7 @@ export default function Dashboard({ isDark, onToggleTheme }) {
       // OPERATIONS - AVAILABILITY VIEW
       // ----------------------------------------------------
       case 'availability': {
-        const gridRows = availability?.grid || [];
+        const gridRows = slicedAvailability?.grid || [];
         let freeCount = 0;
         let assignedCount = 0;
         let overloadCount = 0;
@@ -179,7 +207,7 @@ export default function Dashboard({ isDark, onToggleTheme }) {
           return matchesSearch && matchesFilter;
         });
 
-        const filteredAvailability = { ...availability, grid: filteredGrid };
+        const filteredAvailability = { ...slicedAvailability, grid: filteredGrid };
 
         return (
           <div className="animate-fade-in-up delay-1" style={{ display: 'grid', gap: '1rem' }}>
@@ -771,14 +799,19 @@ export default function Dashboard({ isDark, onToggleTheme }) {
         overloadedTrainers.sort((a, b) => b.days - a.days);
         benchTrainers.sort((a, b) => b.days - a.days);
 
+        const campusRows = campusStats?.campuses || [];
+        const avgUtilization = campusRows.length
+          ? Math.round(campusRows.reduce((acc, c) => acc + c.utilization_pct, 0) / campusRows.length)
+          : 0;
+
         return (
           <div className="animate-fade-in-up delay-1" style={{ display: 'grid', gap: '1rem' }}>
             <div className="metric-row">
               <div className="metric-tile">
-                <div className="metric-tile-icon" style={{ backgroundColor: 'var(--color-info-bg)', color: 'var(--color-info)' }}>⚡</div>
+                <div className="metric-tile-icon" style={{ backgroundColor: 'var(--color-info-bg)', color: 'var(--color-info)' }}>📈</div>
                 <div className="metric-tile-data">
-                  <span className="metric-tile-val">{kpis?.billable_rate ?? '--'}%</span>
-                  <span className="metric-tile-lbl">Billable Roster rate</span>
+                  <span className="metric-tile-val">{avgUtilization}%</span>
+                  <span className="metric-tile-lbl">Average Utilization</span>
                 </div>
               </div>
               <div className="metric-tile">
@@ -804,16 +837,14 @@ export default function Dashboard({ isDark, onToggleTheme }) {
               </div>
             </div>
 
-            <div className="two-col">
+            <div>
               <Card title="Capacity Utilization Chart" subtitle="Daily assigned sessions versus maximum ideal roster caps" chip="Workload Line">
-                <div className="chart-box">
+                <div className="chart-box" style={{ height: '300px' }}>
                   <WorkloadLine workload={kpis?.workload || []} isDark={isDark} />
                 </div>
               </Card>
-              <Card title="Roster Financial Split" subtitle="Billable vs non-billable trainer workload allocations" chip="Utilization Breakdown">
-                <BillingDonut billing={kpis?.billing || {}} isDark={isDark} />
-              </Card>
             </div>
+
 
             <div className="two-equal">
               <Card title="Delivery Stack Trends" subtitle="Trainer monthly assignments count" chip="Monthly bar chart">
@@ -878,6 +909,8 @@ export default function Dashboard({ isDark, onToggleTheme }) {
           onRefresh={fetchAll}
           onToggleTheme={onToggleTheme}
           isDark={isDark}
+          selectedRange={selectedRange}
+          onChangeRange={setSelectedRange}
         />
         <div className="content">
           {error && <div className="toast">API error: {error}. Showing last available data.</div>}

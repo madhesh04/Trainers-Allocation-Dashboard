@@ -41,4 +41,6 @@ class Settings(BaseSettings):
         extra = "ignore"
 
 
+# Trigger Uvicorn reload to load updated environment variables
 settings = Settings()
+
