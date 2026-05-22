@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trainer Allotment — Qlab's Swif ops</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── QLAB'S SWIF OPS DESIGN TOKENS ── */
+:root {
+  --bg-primary: #f8fafc;
+  --bg-primary-rgb: 248,250,252;
+  --bg-secondary: #f1f5f9;
+  --bg-secondary-rgb: 241,245,249;
+  --bg-surface: #ffffff;
+  --bg-surface-rgb: 255,255,255;
+  --border-color: #e2e8f0;
+  --border-color-rgb: 226,232,240;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --accent: #0325BD;
+  --accent-rgb: 3,37,189;
+  --text-accent: #0325BD;
+  --accent-hover: #021a8a;
+  --sidebar-bg: #ffffff;
+  --border-minimal: rgba(0,0,0,0.04);
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-info: #06b6d4;
+  --color-info-bg: #ecfeff;
+  --shadow-premium: 0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 8px -1px rgba(0,0,0,0.03);
+  --shadow-premium-dark: 0 8px 30px -4px rgba(0,0,0,0.35), 0 4px 12px -2px rgba(0,0,0,0.2);
+}
+
+.dark {
+  --bg-primary: #0d0f14;
+  --bg-primary-rgb: 13,15,20;
+  --bg-secondary: #13161e;
+  --bg-secondary-rgb: 19,22,30;
+  --bg-surface: #1a1d27;
+  --bg-surface-rgb: 26,29,39;
+  --border-color: #252836;
+  --border-color-rgb: 37,40,54;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --accent: #0325BD;
+  --accent-rgb: 3,37,189;
+  --text-accent: #d1d1f1;
+  --accent-hover: #1e3aeb;
+  --sidebar-bg: #0d0f14;
+  --border-minimal: rgba(255,255,255,0.06);
+  --color-success: #34d399;
+  --color-success-bg: rgba(52,211,153,0.08);
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251,191,36,0.08);
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(248,113,113,0.08);
+  --color-info: #22d3ee;
+  --color-info-bg: rgba(34,211,238,0.08);
+}
+
+* { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(16px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.35s ease-out forwards; }
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
+.delay-6 { animation-delay: 0.3s; }
+
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.5; transform:scale(0.75); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* ── LAYOUT ── */
+.shell { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 16rem;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  animation: slideInLeft 0.3s ease-out;
+  box-shadow: var(--shadow-premium);
+}
+
+.dark .sidebar { box-shadow: var(--shadow-premium-dark); }
+
+.sidebar-logo-area {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.brand-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 15px rgba(3,37,189,0.25);
+}
+
+.brand-icon svg { width: 18px; height: 18px; color: #fff; fill: none; stroke: currentColor; stroke-width: 2; }
+
+.brand-text { display: flex; flex-direction: column; }
+.brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.brand-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+  margin-top: 1px;
+}
+
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 1.25rem;
+  background: var(--color-success-bg);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 10px;
+  color: var(--color-success);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  animation: pulse-dot 2s ease infinite;
+  flex-shrink: 0;
+}
+
+.sidebar-nav { flex: 1; padding: 0.75rem 0.75rem; overflow-y: auto; }
+
+.nav-section {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.625rem 0.625rem 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  position: relative;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+  margin-bottom: 1px;
+}
+
+.nav-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: rgba(3,37,189,0.08);
+  color: var(--accent);
+  border-color: rgba(3,37,189,0.15);
+}
+
+.dark .nav-item.active {
+  background: rgba(3,37,189,0.15);
+  color: var(--text-accent);
+  border-color: rgba(3,37,189,0.25);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.nav-icon {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nav-item.active .nav-icon { opacity: 1; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sidebar-footer {
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.refresh-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.6;
+}
+.refresh-note span { color: var(--color-info); }
+
+/* ── MAIN ── */
+.main { margin-left: 16rem; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.75rem;
+  height: 56px;
+  background: rgba(var(--bg-surface-rgb), 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+
+.page-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.breadcrumb {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex; align-items: center; gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.breadcrumb .sep { opacity: 0.4; }
+.breadcrumb .current { color: var(--text-accent); }
+
+.topbar-right { display: flex; align-items: center; gap: 0.625rem; }
+
+.date-pill {
+  display: flex;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.date-pill-btn {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+}
+
+.date-pill-btn:hover:not(.active) { background: var(--bg-primary); color: var(--text-primary); }
+
+.date-pill-btn.active {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+  font-size: 14px;
+}
+
+.icon-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(3,37,189,0.1);
+}
+
+.theme-toggle {
+  width: 34px; height: 34px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+  font-size: 15px;
+}
+.theme-toggle:hover { background: var(--bg-secondary); color: var(--text-primary); border-color: var(--border-color); }
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(3,37,189,0.2);
+}
+
+/* ── CONTENT ── */
+.content { padding: 1.5rem 1.75rem; flex: 1; display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ── KPI CARDS ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+
+.kpi-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem 1rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-premium);
+}
+
+.dark .kpi-card { box-shadow: var(--shadow-premium-dark); }
+.kpi-card:hover { transform: translateY(-2px); border-color: rgba(var(--accent-rgb),0.3); box-shadow: 0 0 15px rgba(3,37,189,0.15); }
+
+.kpi-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.875rem; }
+
+.kpi-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.kpi-icon-wrap {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.icon-success { background: var(--color-success-bg); color: var(--color-success); }
+.icon-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.icon-danger  { background: var(--color-danger-bg);  color: var(--color-danger); }
+.icon-info    { background: var(--color-info-bg);    color: var(--color-info); }
+.icon-accent  { background: rgba(3,37,189,0.1);       color: var(--accent); }
+
+.kpi-value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-footer { display: flex; align-items: center; gap: 0.5rem; }
+
+.delta {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+.delta.up   { background: var(--color-success-bg); color: var(--color-success); }
+.delta.down { background: var(--color-danger-bg);  color: var(--color-danger); }
+.delta.neutral { background: var(--color-warning-bg); color: var(--color-warning); }
+
+.kpi-footer-text { font-size: 11px; color: var(--text-muted); }
+
+.kpi-sparkline { position: absolute; bottom: 0; right: 0; width: 90px; height: 44px; opacity: 0.2; }
+
+/* ── SECTION DIVIDERS ── */
+.section-title {
+  font-size: 13px; font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  padding-bottom: 2px;
+}
+.section-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-premium);
+}
+.dark .card { box-shadow: var(--shadow-premium-dark); }
+
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.2px; }
+.card-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+.chip-success { background: var(--color-success-bg); color: var(--color-success); }
+.chip-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+.chip-danger  { background: var(--color-danger-bg);  color: var(--color-danger); }
+.chip-info    { background: var(--color-info-bg);    color: var(--color-info); }
+.chip-accent  { background: rgba(3,37,189,0.1);       color: var(--accent); }
+.dark .chip-accent { background: rgba(3,37,189,0.2); color: var(--text-accent); }
+
+/* ── GRIDS ── */
+.two-col   { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.two-equal { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* ── CHART WRAPPERS ── */
+.chart-box { padding: 1rem 1rem 0.5rem; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+table.data-table thead tr {
+  background: rgba(var(--bg-secondary-rgb),0.5);
+  border-bottom: 1px solid var(--border-color);
+}
+
+table.data-table th {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+table.data-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s;
+}
+
+table.data-table tbody tr:last-child { border-bottom: none; }
+table.data-table tbody tr:hover { background: rgba(var(--bg-secondary-rgb),0.4); }
+
+table.data-table td {
+  padding: 9px 16px;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+table.data-table td.bold { color: var(--text-primary); font-weight: 600; }
+
+/* Status badge */
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+
+.pill-ongoing { background: var(--color-success-bg); color: var(--color-success); }
+.pill-ongoing .dot { background: var(--color-success); animation: pulse-dot 2s infinite; }
+.pill-upcoming { background: var(--color-warning-bg); color: var(--color-warning); }
+.pill-upcoming .dot { background: var(--color-warning); }
+.pill-completed { background: rgba(var(--bg-secondary-rgb),1); color: var(--text-muted); }
+.pill-completed .dot { background: var(--text-muted); }
+
+/* Util bar */
+.util-row { display: flex; align-items: center; gap: 8px; }
+.util-bg { flex: 1; height: 5px; background: var(--border-color); border-radius: 99px; overflow: hidden; }
+.util-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+.util-pct { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 34px; text-align: right; }
+
+/* ── PIPELINE LIST ── */
+.pipeline-scroll { max-height: 320px; overflow-y: auto; }
+
+.pipeline-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pipeline-row:last-child { border-bottom: none; }
+.pipeline-row:hover { background: rgba(var(--bg-secondary-rgb),0.5); }
+
+.pipe-info { flex: 1; min-width: 0; }
+.pipe-course { font-size: 12px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pipe-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.pipe-campus { color: var(--text-secondary); font-weight: 500; }
+
+/* ── HEATMAP ── */
+.heatmap-wrap { padding: 1rem 1.25rem 1.25rem; overflow-x: auto; }
+
+.heatmap-days { display: flex; gap: 3px; margin-left: 88px; margin-bottom: 5px; }
+.hm-day-label { width: 26px; font-size: 9px; text-align: center; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-family: 'JetBrains Mono', monospace; }
+
+.hm-row { display: flex; align-items: center; gap: 3px; margin-bottom: 3px; }
+.hm-name { width: 82px; font-size: 10px; color: var(--text-secondary); text-align: right; padding-right: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+
+.hm-cell {
+  width: 26px; height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, opacity 0.12s;
+}
+.hm-cell:hover { transform: scale(1.25); z-index: 2; }
+
+.hm-free     { background: var(--color-success-bg); border: 1px solid rgba(52,211,153,0.25); }
+.dark .hm-free { background: rgba(52,211,153,0.1); }
+.hm-assigned { background: rgba(3,37,189,0.12); border: 1px solid rgba(3,37,189,0.2); }
+.dark .hm-assigned { background: rgba(3,37,189,0.2); }
+.hm-overload { background: var(--color-danger-bg); border: 1px solid rgba(248,113,113,0.3); }
+.dark .hm-overload { background: rgba(248,113,113,0.15); }
+.hm-noclass  { background: rgba(var(--border-color-rgb),0.5); border: 1px solid var(--border-color); }
+.hm-weekend  { background: rgba(var(--bg-secondary-rgb),0.8); border: 1px solid var(--border-color); opacity: 0.5; }
+
+.hm-legend { display: flex; align-items: center; gap: 14px; margin-top: 10px; padding-left: 88px; flex-wrap: wrap; }
+.hm-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+.hm-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+/* ── CONFLICT ALERTS ── */
+.conflicts-wrap { display: flex; flex-direction: column; gap: 8px; padding: 1rem 1.25rem; }
+
+.conflict-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-danger-bg);
+  border: 1px solid rgba(var(--color-danger-rgb, 248,113,113), 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.conflict-item:hover { background: rgba(248,113,113,0.12); }
+
+.conflict-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.conflict-body { flex: 1; }
+.conflict-title { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.conflict-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+.conflict-date { font-size: 10px; color: var(--color-danger); font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+
+/* ── BILLING STATS ── */
+.billing-stats { display: flex; flex-direction: column; gap: 6px; padding: 0 1.25rem 1rem; }
+
+.billing-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.billing-label { font-size: 12px; color: var(--text-secondary); }
+.billing-val { font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: none;
+  align-items: center; gap: 10px;
+  font-size: 12px; color: var(--text-primary);
+  box-shadow: var(--shadow-premium-dark);
+  z-index: 9999;
+  animation: fadeInUp 0.3s ease;
+}
+
+.toast.show { display: flex; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo-area">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-name">Qlab's · Swif ops</div>
+      <div class="brand-sub">Trainer Allotment</div>
+    </div>
+  </div>
+
+  <div class="live-badge">
+    <div class="live-dot"></div>
+    Live · synced 2m ago
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <a class="nav-item active" href="#">
+      <span class="nav-icon">⬛</span> Dashboard
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📅</span> Schedule
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">👥</span> Trainers
+    </a>
+
+    <div class="nav-section">Operations</div>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">🏫</span> Campuses
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📚</span> Deliveries
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚠️</span> Conflicts
+      <span class="nav-badge">3</span>
+    </a>
+
+    <div class="nav-section">Reports</div>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">📊</span> Utilization
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">💰</span> Billing
+    </a>
+    <a class="nav-item" href="#">
+      <span class="nav-icon">⚙️</span> Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="refresh-note">
+      Auto-refresh <span>every 5 min</span><br>
+      Source · <span>OneDrive Excel</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="page-title">Operations Overview</div>
+      <div class="breadcrumb">
+        <span>Swif ops</span>
+        <span class="sep">/</span>
+        <span>Trainer Allotment</span>
+        <span class="sep">/</span>
+        <span class="current">Dashboard</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-pill">
+        <button class="date-pill-btn">7D</button>
+        <button class="date-pill-btn active">1M</button>
+        <button class="date-pill-btn">3M</button>
+        <button class="date-pill-btn">YTD</button>
+      </div>
+      <button class="icon-btn" title="Refresh" onclick="triggerToast()">↻</button>
+      <button class="icon-btn" title="Export">↓</button>
+      <button class="theme-toggle" title="Toggle theme" onclick="toggleTheme()">🌓</button>
+      <div class="avatar" title="Profile">MG</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── KPI CARDS ── -->
+    <div class="kpi-grid">
+      <div class="kpi-card animate-fade-in-up delay-1">
+        <div class="kpi-card-top">
+          <div class="kpi-label">Active Deliveries</div>
+          <div class="kpi-icon-wrap icon-accent">📦</div>
+        </div>
+        <div class="kpi-value">236</div>
+        <div class="kpi-footer">
+          <span class="delta up">↑ 12%</span>
+          <span class="kpi-footer-text">vs last month</span>
+        </div>
+        <svg class="kpi-sparkline" viewBox="0 0 90 44" preserveAspectRatio="none">
+          <polyline points="0,40 12,32 24,36 36,22 48,26 60,14 72,18 82,8 90,12" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+        </svg>
+      </div>
+
+      <div class="kpi-card animate-fade-in-up delay-2">
+        <div class="kpi-card-top">
+          <div class="kpi-label">Trainers On Ground</div>
+          <div class="kpi-icon-wrap icon-success">👥</div>
+        </div>
+        <div class="kpi-value">48</div>
+        <div class="kpi-footer">
+          <span class="delta up">↑ +5</span>
+          <span class="kpi-footer-text">this week</span>
+        </div>
+        <svg class="kpi-sparkline" viewBox="0 0 90 44" preserveAspectRatio="none">
+          <polyline points="0,34 12,28 24,32 36,20 48,24 60,12 72,16 82,10 90,8" fill="none" stroke="var(--color-success)" stroke-width="2.5"/>
+        </svg>
+      </div>
+
+      <div class="kpi-card animate-fade-in-up delay-3">
+        <div class="kpi-card-top">
+          <div class="kpi-label">Open Conflicts</div>
+          <div class="kpi-icon-wrap icon-danger">⚠️</div>
+        </div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-footer">
+          <span class="delta neutral">! Attention</span>
+          <span class="kpi-footer-text">needs review</span>
+        </div>
+        <svg class="kpi-sparkline" viewBox="0 0 90 44" preserveAspectRatio="none">
+          <polyline points="0,14 12,20 24,12 36,28 48,20 60,34 72,24 82,30 90,38" fill="none" stroke="var(--color-danger)" stroke-width="2.5"/>
+        </svg>
+      </div>
+
+      <div class="kpi-card animate-fade-in-up delay-4">
+        <div class="kpi-card-top">
+          <div class="kpi-label">Billable Rate</div>
+          <div class="kpi-icon-wrap icon-info">💰</div>
+        </div>
+        <div class="kpi-value">78%</div>
+        <div class="kpi-footer">
+          <span class="delta up">↑ +3%</span>
+          <span class="kpi-footer-text">utilization</span>
+        </div>
+        <svg class="kpi-sparkline" viewBox="0 0 90 44" preserveAspectRatio="none">
+          <polyline points="0,36 12,28 24,32 36,22 48,18 60,14 72,10 82,12 90,8" fill="none" stroke="var(--color-info)" stroke-width="2.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- ── ROW 2: BAR + DONUT ── -->
+    <div class="two-col animate-fade-in-up delay-4">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Delivery Activity by Month</div>
+            <div class="card-subtitle">Ongoing · Completed · Upcoming breakdown</div>
+          </div>
+          <span class="chip chip-accent">Bar chart</span>
+        </div>
+        <div class="chart-box" style="height:240px">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Billing Breakdown</div>
+            <div class="card-subtitle">Billable vs non-billable sessions</div>
+          </div>
+          <span class="chip chip-success">Donut</span>
+        </div>
+        <div class="chart-box" style="height:150px; display:flex; align-items:center; justify-content:center;">
+          <canvas id="donutChart" style="max-width:150px;max-height:150px;"></canvas>
+        </div>
+        <div class="billing-stats">
+          <div class="billing-row">
+            <span class="billing-label">Billable</span>
+            <span class="billing-val" style="color:var(--color-success)">78%</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-label">Non-billable</span>
+            <span class="billing-val" style="color:var(--color-warning)">15%</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-label">NA / Internal</span>
+            <span class="billing-val" style="color:var(--text-muted)">7%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ROW 3: CAMPUS TABLE + PIPELINE + STATUS PIE ── -->
+    <div class="three-col animate-fade-in-up delay-5">
+
+      <!-- Campus utilization table -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Campus Utilization</div>
+            <div class="card-subtitle">Top 8 by delivery volume</div>
+          </div>
+          <span class="chip chip-info">Table</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Campus</th>
+                <th>Deliveries</th>
+                <th>Utilization</th>
+              </tr>
+            </thead>
+            <tbody id="campusTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Delivery pipeline -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Delivery Pipeline</div>
+            <div class="card-subtitle">Latest 12 active deliveries</div>
+          </div>
+          <span class="chip chip-warning">Live</span>
+        </div>
+        <div class="pipeline-scroll" id="pipelineList"></div>
+      </div>
+
+      <!-- Status pie + conflicts -->
+      <div class="card" style="display:flex;flex-direction:column;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Status Distribution</div>
+            <div class="card-subtitle">All 236 deliveries</div>
+          </div>
+          <span class="chip chip-accent">Pie</span>
+        </div>
+        <div class="chart-box" style="height:170px;display:flex;align-items:center;justify-content:center;">
+          <canvas id="pieChart" style="max-width:155px;max-height:155px;"></canvas>
+        </div>
+        <div style="border-top:1px solid var(--border-color);">
+          <div class="card-header" style="padding:10px 1.25rem;border-bottom:none;">
+            <div class="card-title" style="font-size:12px;">Conflict Alerts</div>
+            <span class="chip chip-danger">3 open</span>
+          </div>
+          <div class="conflicts-wrap" style="padding:0 1rem 1rem;gap:6px;">
+            <div class="conflict-item">
+              <span class="conflict-icon">⚡</span>
+              <div class="conflict-body">
+                <div class="conflict-title">Vijay Kumar double-booked</div>
+                <div class="conflict-sub">LTIM-Mumbai + KCT · same day</div>
+              </div>
+              <div class="conflict-date">May 23</div>
+            </div>
+            <div class="conflict-item">
+              <span class="conflict-icon">⚡</span>
+              <div class="conflict-body">
+                <div class="conflict-title">No trainer assigned</div>
+                <div class="conflict-sub">SREC · Cloud Azure delivery</div>
+              </div>
+              <div class="conflict-date">May 26</div>
+            </div>
+            <div class="conflict-item">
+              <span class="conflict-icon">⚡</span>
+              <div class="conflict-body">
+                <div class="conflict-title">End date overrun</div>
+                <div class="conflict-sub">VIT-WILP · M.Tech AI/ML</div>
+              </div>
+              <div class="conflict-date">May 29</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ROW 4: HEATMAP + LINE ── -->
+    <div class="two-equal animate-fade-in-up delay-6">
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Trainer Availability — Week of May 19</div>
+            <div class="card-subtitle">Daily allocation heatmap per trainer</div>
+          </div>
+          <span class="chip chip-success">Heatmap</span>
+        </div>
+        <div class="heatmap-wrap" id="heatmapWrap"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Trainer Workload Trend</div>
+            <div class="card-subtitle">Weekly sessions vs capacity over 8 weeks</div>
+          </div>
+          <span class="chip chip-info">Line</span>
+        </div>
+        <div class="chart-box" style="height:240px;">
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="live-dot"></div>
+  Dashboard refreshed · Data synced from OneDrive Excel
+</div>
+
+<script>
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark');
+  rebuildCharts();
+}
+
+// ── DATE FILTER ──
+document.querySelectorAll('.date-pill-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.date-pill-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ── TOAST ──
+function triggerToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+setTimeout(triggerToast, 1400);
+
+// ── CHART HELPERS ──
+function isDark() { return document.documentElement.classList.contains('dark'); }
+
+function getColors() {
+  return {
+    grid: isDark() ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+    text: isDark() ? '#475569' : '#94a3b8',
+    success: isDark() ? '#34d399' : '#10b981',
+    warning: isDark() ? '#fbbf24' : '#f59e0b',
+    danger:  isDark() ? '#f87171' : '#ef4444',
+    info:    isDark() ? '#22d3ee' : '#06b6d4',
+    accent:  '#0325BD',
+    surface: isDark() ? '#1a1d27' : '#ffffff',
+    border:  isDark() ? '#252836' : '#e2e8f0',
+    textPrimary: isDark() ? '#f8fafc' : '#1e293b',
+  };
+}
+
+function tooltipDefaults(c) {
+  return {
+    backgroundColor: c.surface,
+    borderColor: c.border,
+    borderWidth: 1,
+    padding: 10,
+    titleColor: c.textPrimary,
+    bodyColor: c.text,
+    titleFont: { family: "'Inter', sans-serif", weight: '600', size: 12 },
+    bodyFont: { family: "'JetBrains Mono', monospace", size: 11 },
+  };
+}
+
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+
+let charts = {};
+
+function buildCharts() {
+  const c = getColors();
+
+  // BAR CHART
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  charts.bar = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'],
+      datasets: [
+        { label: 'Ongoing',   data: [28,35,42,38,44,52], backgroundColor: isDark() ? 'rgba(52,211,153,0.7)'   : 'rgba(16,185,129,0.65)', borderRadius: 4, borderSkipped: false },
+        { label: 'Completed', data: [18,22,19,25,21,16], backgroundColor: isDark() ? 'rgba(34,211,238,0.5)'   : 'rgba(6,182,212,0.5)',   borderRadius: 4, borderSkipped: false },
+        { label: 'Upcoming',  data: [8,12,10,14,18,24],  backgroundColor: isDark() ? 'rgba(251,191,36,0.65)'  : 'rgba(245,158,11,0.6)',  borderRadius: 4, borderSkipped: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, padding: 14, color: c.text, usePointStyle: true, pointStyle: 'rect', font: { size: 11 } } },
+        tooltip: tooltipDefaults(c)
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: c.text } },
+        y: { grid: { color: c.grid }, border: { display: false }, ticks: { color: c.text } }
+      },
+      animation: { duration: 900, easing: 'easeOutQuart' }
+    }
+  });
+
+  // DONUT
+  const donutCtx = document.getElementById('donutChart').getContext('2d');
+  charts.donut = new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Billable', 'Non-Billable', 'NA'],
+      datasets: [{
+        data: [78, 15, 7],
+        backgroundColor: [c.success, c.warning, isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'],
+        borderColor: c.surface,
+        borderWidth: 3,
+        hoverOffset: 5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: tooltipDefaults(c) },
+      animation: { animateRotate: true, duration: 1100 }
+    }
+  });
+
+  // PIE
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  charts.pie = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Ongoing', 'Upcoming', 'Completed'],
+      datasets: [{
+        data: [52, 24, 160],
+        backgroundColor: [
+          isDark() ? 'rgba(52,211,153,0.75)' : 'rgba(16,185,129,0.7)',
+          isDark() ? 'rgba(251,191,36,0.75)'  : 'rgba(245,158,11,0.7)',
+          isDark() ? 'rgba(34,211,238,0.45)'  : 'rgba(6,182,212,0.4)'
+        ],
+        borderColor: c.surface,
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 8, boxHeight: 8, padding: 10, color: c.text, usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } },
+        tooltip: tooltipDefaults(c)
+      },
+      animation: { animateRotate: true, duration: 1100 }
+    }
+  });
+
+  // LINE
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  charts.line = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+      datasets: [
+        {
+          label: 'Sessions assigned',
+          data: [42,48,45,55,52,60,58,65],
+          borderColor: c.accent,
+          backgroundColor: isDark() ? 'rgba(3,37,189,0.08)' : 'rgba(3,37,189,0.06)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: c.accent,
+          pointBorderColor: c.surface,
+          pointBorderWidth: 2,
+        },
+        {
+          label: 'Capacity',
+          data: [50,50,50,55,55,60,60,65],
+          borderColor: c.grid,
+          borderDash: [5,5],
+          fill: false,
+          tension: 0,
+          borderWidth: 1.5,
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { boxWidth: 12, boxHeight: 2, padding: 14, color: c.text, font: { size: 11 } } },
+        tooltip: tooltipDefaults(c)
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: c.text } },
+        y: { grid: { color: c.grid }, border: { display: false }, ticks: { color: c.text } }
+      },
+      animation: { duration: 1000, easing: 'easeOutQuart' }
+    }
+  });
+}
+
+function rebuildCharts() {
+  Object.values(charts).forEach(ch => ch.destroy());
+  charts = {};
+  buildCharts();
+}
+
+buildCharts();
+
+// ── CAMPUS TABLE ──
+const campuses = [
+  { name: 'LTIM-Mumbai', d: 24, u: 92, color: 'success' },
+  { name: 'VIT',         d: 18, u: 85, color: 'success' },
+  { name: 'Parul',       d: 16, u: 78, color: 'warning' },
+  { name: 'KCT',         d: 14, u: 72, color: 'warning' },
+  { name: 'SREC',        d: 12, u: 65, color: 'warning' },
+  { name: 'LTIM-Chennai',d: 10, u: 60, color: 'warning' },
+  { name: 'DSATM',       d:  9, u: 54, color: 'danger' },
+  { name: 'Hexaware',    d:  7, u: 45, color: 'danger' },
+];
+
+const tbody = document.getElementById('campusTbody');
+campuses.forEach(r => {
+  const fillColor = r.color === 'success' ? 'var(--color-success)' : r.color === 'warning' ? 'var(--color-warning)' : 'var(--color-danger)';
+  tbody.innerHTML += `
+    <tr>
+      <td class="bold">${r.name}</td>
+      <td>${r.d}</td>
+      <td>
+        <div class="util-row">
+          <div class="util-bg"><div class="util-fill" style="width:${r.u}%;background:${fillColor}"></div></div>
+          <span class="util-pct" style="color:${fillColor}">${r.u}%</span>
+        </div>
+      </td>
+    </tr>`;
+});
+
+// ── PIPELINE ──
+const pipelines = [
+  { course: 'Cloud Azure Full Stack',         campus: 'LTIM-Mumbai', s: '01 May', e: '30 Jun', status: 'ongoing' },
+  { course: 'M.Tech CSE (AI/ML) Reporting',  campus: 'VIT',         s: '16 May', e: '29 May', status: 'ongoing' },
+  { course: 'C Programming Fundamentals',    campus: 'KCT',         s: '20 May', e: '15 Jun', status: 'ongoing' },
+  { course: 'Oracle DBA',                    campus: 'Parul',       s: '25 May', e: '20 Jul', status: 'upcoming' },
+  { course: 'SDET Java Automation',          campus: 'SREC',        s: '01 Jun', e: '31 Jul', status: 'upcoming' },
+  { course: 'SDET Java (Bhub Batch)',         campus: 'LTIM-Bhub',  s: '02 Jun', e: '30 Jun', status: 'upcoming' },
+  { course: 'Java Full Stack Bootcamp',       campus: 'KIET',        s: '05 Jun', e: '31 Jul', status: 'upcoming' },
+  { course: 'Software Testing Module',        campus: 'SKI',         s: '10 Apr', e: '10 May', status: 'completed' },
+  { course: 'Microservices Architecture',    campus: 'CMREC',       s: '01 Mar', e: '30 Apr', status: 'completed' },
+  { course: 'MERN Stack Development',        campus: 'DSATM',       s: '15 Mar', e: '15 May', status: 'completed' },
+  { course: 'Cloud AWS Practitioner',        campus: 'Hexaware',    s: '01 Apr', e: '30 Apr', status: 'completed' },
+  { course: 'Python SDET Automation',        campus: 'RMK',         s: '10 Jun', e: '10 Aug', status: 'upcoming' },
+];
+
+const pList = document.getElementById('pipelineList');
+pipelines.forEach(p => {
+  const pillClass = p.status === 'ongoing' ? 'pill-ongoing' : p.status === 'upcoming' ? 'pill-upcoming' : 'pill-completed';
+  pList.innerHTML += `
+    <div class="pipeline-row">
+      <div class="pipe-info">
+        <div class="pipe-course">${p.course}</div>
+        <div class="pipe-meta">
+          <span class="pipe-campus">${p.campus}</span>
+          <span>·</span>
+          <span>${p.s} → ${p.e}</span>
+        </div>
+      </div>
+      <span class="status-pill ${pillClass}"><span class="dot"></span>${p.status}</span>
+    </div>`;
+});
+
+// ── HEATMAP ──
+const trainers = ['Vijay Kumar','Gokulnath S','Anand B','Abinaya P','Sachin V','Karunya M','Subash K','Madhesh P'];
+const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function randStatus(isWknd) {
+  if (isWknd) return Math.random() < 0.7 ? 'weekend' : 'noclass';
+  const r = Math.random();
+  if (r < 0.05) return 'overload';
+  if (r < 0.5)  return 'assigned';
+  if (r < 0.65) return 'noclass';
+  return 'free';
+}
+
+let hmHtml = '<div class="heatmap-days">';
+days.forEach(d => { hmHtml += `<div class="hm-day-label">${d}</div>`; });
+hmHtml += '</div>';
+
+trainers.forEach(t => {
+  hmHtml += `<div class="hm-row"><div class="hm-name" title="${t}">${t}</div>`;
+  days.forEach((d,i) => {
+    const st = randStatus(i >= 5);
+    const cls = `hm-${st === 'noclass' ? 'noclass' : st}`;
+    const label = {assigned:'Assigned',free:'Free',overload:'Overloaded',noclass:'No class',weekend:'Weekend'}[st];
+    hmHtml += `<div class="hm-cell ${cls}" title="${t} · ${d} · ${label}"></div>`;
+  });
+  hmHtml += '</div>';
+});
+
+hmHtml += `<div class="hm-legend">
+  <div class="hm-legend-item"><div class="hm-swatch hm-assigned"></div>Assigned</div>
+  <div class="hm-legend-item"><div class="hm-swatch hm-free"></div>Free</div>
+  <div class="hm-legend-item"><div class="hm-swatch hm-overload"></div>Overloaded</div>
+  <div class="hm-legend-item"><div class="hm-swatch hm-noclass"></div>No class</div>
+  <div class="hm-legend-item"><div class="hm-swatch hm-weekend"></div>Weekend</div>
+</div>`;
+
+document.getElementById('heatmapWrap').innerHTML = hmHtml;
+</script>
+</body>
+</html>
