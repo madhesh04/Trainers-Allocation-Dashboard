@@ -38,7 +38,6 @@ export default function Topbar({ activeTab = 'dashboard', lastSynced, onRefresh,
         <button className="ghost-button" onClick={onRefresh}>Refresh</button>
         <button className="icon-button" onClick={onToggleTheme} aria-label="Toggle theme">{isDark ? '☾' : '☀'}</button>
         <div className="sync-text">{syncLabel(lastSynced)}</div>
-        <div className="avatar">MP</div>
       </div>
     </header>
   );
